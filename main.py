@@ -934,6 +934,8 @@ bot_app = setup_bot()
 
 if __name__ == "__main__":
     print("🚀 Starting MAD-TIGER-BOT...", flush=True)
+    # Flask شغال في ثريد خلفي من فوق
+    # نشغل البوت بطريقة PTB v22 المتوافقة مع Python 3.14
     try:
         bot_app.run_polling(
             drop_pending_updates=True,
