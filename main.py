@@ -934,14 +934,20 @@ bot_app = setup_bot()
 
 if __name__ == "__main__":
     print("🚀 Starting MAD-TIGER-BOT...", flush=True)
-    # Flask شغال في ثريد خلفي من فوق
-    # نشغل البوت بطريقة PTB v22 المتوافقة مع Python 3.14
+    # احذف الـ webhook أول عشان ما يصير Conflict
     try:
-        bot_app.run_polling(
-            drop_pending_updates=True,
-            allowed_updates=["message", "callback_query"]
-        )
-    except Exception as e:
-        print(f"❌ Polling crashed: {e}")
-        import time
-        time.sleep(10)
+        import asyncio
+        async def clean():
+            from telegram import Bot
+            b = Bot(token=BOT_TOKEN)
+            await b.delete_webhook(drop_pending_updates=True)
+            print("✅ Webhook cleaned")
+        asyncio.run(clean())
+    except:
+        pass
+    
+    # شغل البوت
+    bot_app.run_polling(
+        drop_pending_updates=True,
+        allowed_updates=["message", "callback_query"]
+    )
