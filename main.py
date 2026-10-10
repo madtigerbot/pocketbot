@@ -932,22 +932,46 @@ def setup_bot():
 
 bot_app = setup_bot()
 
+async def main():
+    restart = 0
+    while restart < 20:
+        try:
+            print("🚀 Starting MAD-TIGER-BOT...", flush=True)
+            await bot_app.initialize()
+            await bot_app.start()
+            # حذف webhook لتجنب Conflict
+            try:
+                await bot_app.bot.delete_webhook(drop_pending_updates=True)
+                print("✅ Webhook deleted")
+            except Exception as wh_e:
+                print(f"webhook delete {wh_e}")
+
+            await bot_app.updater.start_polling(drop_pending_updates=True, allowed_updates=["message", "callback_query"])
+            restart = 0
+            print("✅ Polling started")
+            await asyncio.Future()
+        except Exception as e:
+            err = str(e).lower()
+            if "conflict" in err or "terminated by other" in err:
+                print(f"⚠️ Conflict - waiting 30s: {e}")
+                try:
+                    await bot_app.updater.stop()
+                    await bot_app.stop()
+                    await bot_app.shutdown()
+                except:
+                    pass
+                await asyncio.sleep(30)
+                restart += 1
+                continue
+            restart += 1
+            print(f"❌ Crashed {e}")
+            try:
+                await bot_app.updater.stop()
+                await bot_app.stop()
+                await bot_app.shutdown()
+            except:
+                pass
+            await asyncio.sleep(20)
+
 if __name__ == "__main__":
-    print("🚀 Starting MAD-TIGER-BOT...", flush=True)
-    # احذف الـ webhook أول عشان ما يصير Conflict
-    try:
-        import asyncio
-        async def clean():
-            from telegram import Bot
-            b = Bot(token=BOT_TOKEN)
-            await b.delete_webhook(drop_pending_updates=True)
-            print("✅ Webhook cleaned")
-        asyncio.run(clean())
-    except:
-        pass
-    
-    # شغل البوت
-    bot_app.run_polling(
-        drop_pending_updates=True,
-        allowed_updates=["message", "callback_query"]
-    )
+    asyncio.run(main())
